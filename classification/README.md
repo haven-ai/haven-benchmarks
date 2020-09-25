@@ -32,9 +32,8 @@ python trainval.py -e mnist_batch_size -sb <savedir_base> -d <datadir> -r 1
     - Use the jupyer code defined in the README of `https://github.com/ElementAI/LCFCN` to visualize the results
     - Show train_loss line plots for the score_list across batch sizes
     - Show validation accuracy bar chart across batch sizes 
-    
-## Other libraries that use Haven
 
+## Other libraries that use Haven
 - LCFCN https://github.com/ElementAI/LCFCN
 - Embedding Propagation https://github.com/ElementAI/embedding-propagation
 - Bilevel Augment https://github.com/ElementAI/bilevel_augment
