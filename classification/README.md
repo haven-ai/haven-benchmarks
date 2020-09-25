@@ -33,6 +33,21 @@ python trainval.py -e mnist_batch_size -sb <savedir_base> -d <datadir> -r 1
     - Show train_loss line plots for the score_list across batch sizes
     - Show validation accuracy bar chart across batch sizes 
 
+## Expected structure
+```
+classification/
+│
+├── src/
+│   ├── datasets.py
+│   └── models.py
+├── scripts/
+│   ├── visualize_mnist.py
+│   └── train_on_single_image.py
+├── exp_configs.py
+├── README.md
+└── trainval.py
+```
+
 ## Other libraries that use Haven
 - LCFCN https://github.com/ElementAI/LCFCN
 - Embedding Propagation https://github.com/ElementAI/embedding-propagation
