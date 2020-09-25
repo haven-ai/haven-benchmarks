@@ -36,8 +36,8 @@ python trainval.py -e mnist_batch_size -sb <savedir_base> -d <datadir> -r 1
 ## Expected structure
 ```
 classification/
-│
 ├── src/
+│   ├── __init__.py
 │   ├── datasets.py
 │   └── models.py
 ├── scripts/
