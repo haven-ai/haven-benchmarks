@@ -1,11 +1,13 @@
 from torch import nn
 from torch.nn import functional as F
-import math
 
 
 def get_model(model_name, train_set=None):
+    model = None
     if model_name == "mlp":
         model = Mlp(n_classes=10, dropout=False)
+
+    return model
 
 
 # =====================================================
