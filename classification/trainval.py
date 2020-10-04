@@ -39,12 +39,12 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0):
                                      datadir=datadir,
                                      exp_dict=exp_dict)
 
-    test_set = datasets.get_dataset(dataset_name=exp_dict["dataset"]["name"],
+    val_set = datasets.get_dataset(dataset_name=exp_dict["dataset"]["name"],
                                     train_flag=False,
                                     datadir=datadir,
                                     exp_dict=exp_dict)
 
-    model = models.get_model(exp_dict["model"]["name"]).cuda()
+    model = models.get_model(exp_dict).cuda()
     model_path = os.path.join(savedir, "model.pth")
     score_list_path = os.path.join(savedir, "score_list_pkl")
 
@@ -59,12 +59,49 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0):
     # train & val
     print("Starting experiment at epoch %d" % (s_epoch))
 
-    train_sampler = RandomSampler(data_source=train_set, replacement=True, num_samples=2*len(test_set))
+    train_sampler = RandomSampler(data_source=train_set, replacement=True, num_samples=2*len(val_set))
     train_loader = DataLoader(train_set, sampler=train_sampler, batch_size=exp_dict["batch_size"],
                               drop_last=True, num_workers=num_workers)
+
+    val_sampler = torch.utils.data.SequentialSampler(val_set)
+    val_loader = DataLoader(val_set,
+                            sampler=val_sampler,
+                            batch_size=1,
+                            num_workers=num_workers)
+
     for e in range(s_epoch, exp_dict["max_epoch"]):
         score_dict = {}
         # todo: figure out how to use mlp and print the score then save the best checkpoint
+
+        # Train the model
+        train_dict = model.train_on_loader(train_loader)
+
+        # Validate and Visualize the model
+        val_dict = model.val_on_loader(val_loader,
+                        savedir_images=os.path.join(savedir, "images"),
+                        n_images=3)
+        score_dict.update(val_dict)
+        # model.vis_on_loader(
+        #     vis_loader, savedir=os.path.join(savedir, "images"))
+
+        # Get new score_dict
+        score_dict.update(train_dict)
+        score_dict["epoch"] = len(score_list)
+
+        # Report & Save
+        score_df = pd.DataFrame(score_list)
+        print("\n", score_df.tail(), "\n")
+        hu.torch_save(model_path, model.get_state_dict())
+        hu.save_pkl(score_list_path, score_list)
+        print("Checkpoint Saved: %s" % savedir)
+
+        # Save Best Checkpoint
+        if e == 0 or (score_dict.get("val_score", 0) > score_df["val_score"][:-1].fillna(0).max()):
+            hu.save_pkl(os.path.join(
+                savedir, "score_list_best.pkl"), score_list)
+            hu.torch_save(os.path.join(savedir, "model_best.pth"),
+                          model.get_state_dict())
+            print("Saved Best: %s" % savedir)
 
     print('Experiment completed et epoch %d' % e)
 

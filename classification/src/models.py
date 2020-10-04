@@ -1,11 +1,26 @@
+import os
+
+import torch.optim
 from torch import nn
 from torch.nn import functional as F
+from tqdm import tqdm
+import numpy as np
 
 
-def get_model(model_name, train_set=None):
+def get_model(exp_dict):
     model = None
-    if model_name == "mlp":
+    if exp_dict["model"]["name"] == "mlp":
         model = Mlp(n_classes=10, dropout=False)
+
+    if exp_dict["optimizer"] == "adam":
+        model.opt = torch.optim.Adam(
+            model.parameters(), lr=exp_dict["lr"], betas=(0.99, 0.999), weight_decay=0.0005)
+
+    elif exp_dict["optimizer"] == "sgd":
+        model.opt = torch.optim.SGD(
+            model.parameters(), lr=exp_dict["lr"])
+    else:
+        raise ValueError
 
     return model
 
@@ -19,21 +34,23 @@ class Mlp(nn.Module):
                  bias=True, dropout=False):
         super().__init__()
 
+        self.opt = None
+
         self.dropout=dropout
         self.input_size = input_size
         self.hidden_layers = nn.ModuleList([nn.Linear(in_size, out_size, bias=bias) for
                                             in_size, out_size in zip([self.input_size] + hidden_sizes[:-1], hidden_sizes)])
         self.output_layer = nn.Linear(hidden_sizes[-1], n_classes, bias=bias)
-        if self.exp_dict["optimizer"] == "adam":
-            self.opt = torch.optim.Adam(
-                self.model_base.parameters(), lr=self.exp_dict["lr"], betas=(0.99, 0.999), weight_decay=0.0005)
+        # if self.exp_dict["optimizer"] == "adam":
+        #     self.opt = torch.optim.Adam(
+        #         self.model_base.parameters(), lr=self.exp_dict["lr"], betas=(0.99, 0.999), weight_decay=0.0005)
+        #
+        # elif self.exp_dict["optimizer"] == "sgd":
+        #     self.opt = torch.optim.SGD(
+        #         self.model_base.parameters(), lr=self.exp_dict["lr"])
 
-        elif self.exp_dict["optimizer"] == "sgd":
-            self.opt = torch.optim.SGD(
-                self.model_base.parameters(), lr=self.exp_dict["lr"])
-
-        else:
-            raise ValueError
+        # else:
+        #     raise ValueError
 
     def forward(self, x):
         x = x.view(-1, self.input_size)
@@ -98,15 +115,29 @@ class Mlp(nn.Module):
         self.train()
 
         images = batch["images"].cuda()
-        points = batch["points"].long().cuda()
-        logits = forward(images)
+        labels = batch["labels"].long().cuda()
+        logits = self.forward(images)
         criterion = torch.nn.CrossEntropyLoss(reduction="mean")
-        loss = criterion(logits, points.view(-1))
+        loss = criterion(logits, labels.view(-1))
         loss.backward()
 
         self.opt.step()
 
         return {"train_loss": loss.item()}
+
+    def val_on_batch(self, batch):
+        self.eval()
+        images = batch["images"].cuda()
+        labels = batch["labels"].long().cuda()
+        logits = self.forward(images)
+        probs = logits.sigmoid().cpu().numpy()
+
+        # classifications = np.zeros(probs.shape[0])
+        # for i in range(0, probs.shape[0]):
+        #     classifications[i] = np.argmax(probs[i])
+
+        classifications = np.argmax(probs,axis=1)
+        return {'miscounts': np.count_nonzero(classifications - labels)}
 
 
 
