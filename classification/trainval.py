@@ -71,22 +71,20 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0):
 
     for e in range(s_epoch, exp_dict["max_epoch"]):
         score_dict = {}
-        # todo: figure out how to use mlp and print the score then save the best checkpoint
 
         # Train the model
         train_dict = model.train_on_loader(train_loader)
+        score_dict.update(train_dict)
 
         # Validate and Visualize the model
         val_dict = model.val_on_loader(val_loader,
                         savedir_images=os.path.join(savedir, "images"),
                         n_images=3)
         score_dict.update(val_dict)
-        # model.vis_on_loader(
-        #     vis_loader, savedir=os.path.join(savedir, "images"))
 
         # Get new score_dict
-        score_dict.update(train_dict)
         score_dict["epoch"] = len(score_list)
+        score_list += [score_dict]
 
         # Report & Save
         score_df = pd.DataFrame(score_list)
@@ -96,7 +94,7 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0):
         print("Checkpoint Saved: %s" % savedir)
 
         # Save Best Checkpoint
-        if e == 0 or (score_dict.get("val_score", 0) > score_df["val_score"][:-1].fillna(0).max()):
+        if e == 0 or (score_dict.get("val_acc", 0) > score_df["val_acc"][:-1].fillna(0).max()):
             hu.save_pkl(os.path.join(
                 savedir, "score_list_best.pkl"), score_list)
             hu.torch_save(os.path.join(savedir, "model_best.pth"),
