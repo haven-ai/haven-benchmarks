@@ -20,43 +20,60 @@ from src import datasets
 import argparse
 
 
-def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0):
+def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cuda=False):
     # bookkeeping
     pprint.pprint(exp_dict)  # print the experiment configuration
-    exp_id = hu.hash_dict(exp_dict)  # generate random id for the experiment
-    savedir = os.path.join(savedir_base, exp_id)  # generate the route to keep the experiment result
+    exp_id = hu.hash_dict(exp_dict)  # generate a unique id for the experiment
+    savedir = os.path.join(savedir_base, exp_id)  # generate a route with the experiment id
     if reset:
         hc.delete_and_backup_experiment(savedir)
 
-    os.makedirs(savedir, exist_ok=True)
+    os.makedirs(savedir, exist_ok=True)  # create the route to keep the experiment result
     hu.save_json(os.path.join(savedir, "exp_dict.json"), exp_dict)  # save the experiment config as json
     print("Experiment saved in %s" % savedir)
 
-    # dataset
-    # train set
+    # set cuda
+    if use_cuda:
+        device = 'cuda'
+        assert torch.cuda.is_available(), 'cuda is not available, please run with "-c 0"'  # check if cuda is available 
+    else:
+        device = 'cpu'
+
+    # Dataset
+    # ==================
+    # train set 
+    # load the dataset for training from the datasets
     train_set = datasets.get_dataset(dataset_name=exp_dict["dataset"]["name"],
                                      train_flag=True,
                                      datadir=datadir,
                                      exp_dict=exp_dict)
-
+    # val set
+    # load the dataset for validation from the datasets
     val_set = datasets.get_dataset(dataset_name=exp_dict["dataset"]["name"],
                                     train_flag=False,
                                     datadir=datadir,
                                     exp_dict=exp_dict)
+    
+    # Model
+    # ==================
+    model = models.get_model(exp_dict).to(device)
+    model_path = os.path.join(savedir, "model.pth")  # generate the route to keep the model of the experiment
+    score_list_path = os.path.join(savedir, "score_list_pkl")  # generate the route to keep the score list
 
-    model = models.get_model(exp_dict).cuda()
-    model_path = os.path.join(savedir, "model.pth")
-    score_list_path = os.path.join(savedir, "score_list_pkl")
-
-    if os.path.exists(score_list_path):
+    if os.path.exists(score_list_path):  
+        # resume experiment from the last checkpoint, load the latest model
+        # epoch starts from last epoch plus one
         model.load_state_dict(hu.torch_load(model_path))
         score_list = hu.load_pkl(score_list_path)
         s_epoch = score_list[-1]["epoch"] - 1
     else:
+        # restart experiment
+        # epoch starts from zero
         score_list = []
         s_epoch = 0
 
-    # train & val
+    # Train & Val
+    # ==================
     print("Starting experiment at epoch %d" % (s_epoch))
 
     train_sampler = RandomSampler(data_source=train_set, replacement=True, num_samples=2*len(val_set))
@@ -74,22 +91,22 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0):
 
         # Train the model
         train_dict = model.train_on_loader(train_loader)
-        score_dict.update(train_dict)
+        score_dict.update(train_dict)  # update the training loss
 
         # Validate and Visualize the model
         val_dict = model.val_on_loader(val_loader,
                         savedir_images=os.path.join(savedir, "images"),
                         n_images=3)
-        score_dict.update(val_dict)
+        score_dict.update(val_dict)  # update the validation accuracy
 
         # Get new score_dict
-        score_dict["epoch"] = len(score_list)
+        score_dict["epoch"] = len(score_list)  # keep track of the epoch as score_list increments
         score_list += [score_dict]
 
         # Report & Save
         score_df = pd.DataFrame(score_list)
-        print("\n", score_df.tail(), "\n")
-        hu.torch_save(model_path, model.get_state_dict())
+        print("\n", score_df.tail(), "\n")  # print out the epoch, train_loss, and val_acc in the score_list as a table
+        hu.torch_save(model_path, model.get_state_dict()) # save the model state (i.e. state_dic, including optimizer) to the model path
         hu.save_pkl(score_list_path, score_list)
         print("Checkpoint Saved: %s" % savedir)
 
@@ -105,8 +122,10 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0):
 
 
 if __name__ == "__main__":
+    # create a parser that will hold all the information necessary to parse the command line into Python data type
     parser = argparse.ArgumentParser()
 
+    # add required arguments and default arguments so that the parser know how to take strings on the command line
     parser.add_argument('-e', '--exp_group_list', nargs="+")
     parser.add_argument('-sb', '--savedir_base', required=True)
     parser.add_argument('-d', '--datadir', required=True)
@@ -114,7 +133,9 @@ if __name__ == "__main__":
     parser.add_argument("-ei", "--exp_id", default=None)
     parser.add_argument("-j", "--run_jobs", default=0, type=int)
     parser.add_argument("-nw", "--num_workers", type=int, default=0)
+    parser.add_argument("-c", "--use_cuda", type=int, default=0)    # user can define whether to run with cuda or cpu, default is not using cuda
 
+    # parse the arguments from the command line
     args = parser.parse_args()
 
     # Collect experiments
@@ -152,4 +173,5 @@ if __name__ == "__main__":
                      savedir_base=args.savedir_base,
                      datadir=args.datadir,
                      reset=args.reset,
-                     num_workers=args.num_workers)
+                     num_workers=args.num_workers,
+                     use_cuda=args.use_cuda)

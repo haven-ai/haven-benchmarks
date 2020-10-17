@@ -134,6 +134,10 @@ class Mlp(nn.Module):
                       "opt":self.opt.state_dict()}
 
         return state_dict
+        
+    def load_state_dict(self, state_dict):
+        self.model_base.load_state_dict(state_dict["model"])
+        self.opt.load_state_dict(state_dict["opt"])
 
 
 class Meter:
