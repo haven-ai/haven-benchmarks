@@ -1,3 +1,67 @@
+# Classification - MNIST Example
+
+## 1. Install Haven
+`pip install --upgrade git+https://github.com/haven-ai/haven-ai`
+
+This command installs the [Haven library](https://github.com/haven-ai/haven-ai) which helps in managing the experiments.
+
+## 2. Experiemnt
+Run the experiment with the following command on terminal
+
+`python trainval.py -e <exp_group_name> -sb <directory_to_save_results> -d <directory_to_save_datasets> -r 1`
+
+-e: Indicate which experiemnt you want to run
+
+option1: mnist_batch_size. This experiemnt group investigates the effect of training batch sizes on the model. 
+    
+option2: mnist_learning_rate. This experiment group investigates the effect of learning rates on the model.
+
+-sb: Specify where the experiment results will be stored
+
+-d: Specify where the datasets will be stored
+
+-r: Indicate whether to reset the model after each experiment
+
+
+## 3. Visualize Results
+### 3.1 Launch Jupyter by running the following  on terminal
+```
+jupyter nbextension enable --py widgetsnbextension --sys-prefix
+jupyter notebook
+```
+
+### 3.2 On a Jupyter cell, run the following script
+```python
+from haven import haven_jupyter as hj
+from haven import haven_results as hr
+from haven import haven_utils as hu
+savedir_base = '<the directory of the result>'
+fname = '<the directory of the experiemnt configuration file>'
+
+exp_list = []
+# indicate the experiment group you have run here
+for exp_group in [
+    'mnist_learning_rate', 
+    'mnist_batch_size'
+                 ]:
+    exp_list += hu.load_py(fname).EXP_GROUPS[exp_group]
+
+# get experiments
+rm = hr.ResultManager(exp_list=exp_list, 
+                      savedir_base=savedir_base, 
+                      verbose=0
+                     )
+hj.get_dashboard(rm, vars(), wide_display=True)
+```
+
+## 4. Results
+### 4.1 Table
+
+### 4.2 Line Plots
+
+### 4.3 Bar Plots
+
+
 # MNIST Example
 
 ## ToDo
