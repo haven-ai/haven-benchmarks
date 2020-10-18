@@ -58,7 +58,7 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
     # ==================
     model = models.get_model(exp_dict).to(device)
     model_path = os.path.join(savedir, "model.pth")  # generate the route to keep the model of the experiment
-    score_list_path = os.path.join(savedir, "score_list_pkl")  # generate the route to keep the score list
+    score_list_path = os.path.join(savedir, "score_list.pkl")  # generate the route to keep the score list
 
     if os.path.exists(score_list_path):  
         # resume experiment from the last checkpoint, load the latest model
