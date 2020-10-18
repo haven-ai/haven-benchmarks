@@ -3,7 +3,7 @@ from haven import haven_utils as hu
 EXP_GROUPS = {}
 EXP_GROUPS['mnist_batch_size'] = {"dataset": {'name': 'mnist'},
                                   "model": {'name': 'mlp'},
-                                  "batch_size": [1, 5, 10, 25, 50],
+                                  "batch_size": [64, 128, 256, 512, 1024],
                                   "max_epoch": [100],
                                   'dataset_size': [
                                       {'train': 'all', 'val': 'all'},
@@ -13,7 +13,7 @@ EXP_GROUPS['mnist_batch_size'] = {"dataset": {'name': 'mnist'},
                                   }
 EXP_GROUPS['mnist_learning_rate'] = {"dataset": {'name': 'mnist'},
                                   "model": {'name': 'mlp'},
-                                  "batch_size": [5],
+                                  "batch_size": [256],
                                   "max_epoch": [100],
                                   'dataset_size': [
                                       {'train': 'all', 'val': 'all'},

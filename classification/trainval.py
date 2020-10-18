@@ -156,15 +156,11 @@ if __name__ == "__main__":
     # Run experiments
     # ===============
     if args.run_jobs:
-        from haven import haven_jobs as hjb
-
-        jm = hjb.JobManager(exp_list=exp_list, savedir_base=args.savedir_base)
-        jm_summary_list = jm.get_summary()
-        print(jm.get_summary()['status'])
-
-        import usr_configs as uc
-
-        uc.run_jobs(exp_list, args.savedir_base, args.datadir)
+        # run with job scheduler
+        from haven import haven_jobs as hj
+        hj.run_exp_list_jobs(exp_list, 
+                       savedir_base=args.savedir_base, 
+                       workdir=os.path.dirname(os.path.realpath(__file__)))
 
     else:
         for exp_dict in exp_list:
