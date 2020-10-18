@@ -55,11 +55,17 @@ hj.get_dashboard(rm, vars(), wide_display=True)
 ```
 
 ## 4. Results
+
 ### 4.1 Table
+
 <img width="1065" alt="Screen Shot 2020-10-18 at 6 12 01 PM" src="https://user-images.githubusercontent.com/46538726/96387114-dbb34b00-116d-11eb-824d-c532436a57d1.png">
+
 ### 4.2 Line Plots
+
 <img width="1037" alt="Screen Shot 2020-10-18 at 6 11 39 PM" src="https://user-images.githubusercontent.com/46538726/96387162-10270700-116e-11eb-8e1b-1d6a305b644d.png">
-### 4.3 Bar Plots
+
+### 4.3 Bar plots
+
 <img width="1036" alt="Screen Shot 2020-10-18 at 6 11 11 PM" src="https://user-images.githubusercontent.com/46538726/96387168-1ddc8c80-116e-11eb-8f8d-4f3e8c5da1ba.png">
 
 # MNIST Example
