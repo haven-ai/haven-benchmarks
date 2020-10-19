@@ -5,7 +5,7 @@
 
 This command installs the [Haven library](https://github.com/haven-ai/haven-ai) which helps in managing the experiments.
 
-## 2. Experiemnt
+## 2. Experiement
 Run the experiment with the following command on terminal
 
 `python trainval.py -e <exp_group_name> -sb <directory_to_save_results> -d <directory_to_save_datasets> -r 1`
