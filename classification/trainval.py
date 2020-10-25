@@ -62,7 +62,7 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
 
     if os.path.exists(score_list_path):  
         # resume experiment from the last checkpoint, load the latest model
-        # epoch starts from last epoch minus one
+        # epoch starts from last completed epoch plus one
         model.set_state_dict(hu.torch_load(model_path))
         score_list = hu.load_pkl(score_list_path)
         s_epoch = score_list[-1]["epoch"] + 1
