@@ -65,7 +65,7 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
         # epoch starts from last epoch minus one
         model.set_state_dict(hu.torch_load(model_path))
         score_list = hu.load_pkl(score_list_path)
-        s_epoch = score_list[-1]["epoch"] - 1
+        s_epoch = score_list[-1]["epoch"] + 1
     else:
         # restart experiment
         # epoch starts from zero
