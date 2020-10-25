@@ -135,8 +135,8 @@ class Mlp(nn.Module):
 
         return state_dict
         
-    def load_state_dict(self, state_dict):
-        self.model.load_state_dict(state_dict["model"])
+    def set_state_dict(self, state_dict):
+        self.load_state_dict(state_dict["model"])
         self.opt.load_state_dict(state_dict["opt"])
 
 
