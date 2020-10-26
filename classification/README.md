@@ -62,11 +62,15 @@ hj.get_dashboard(rm, vars(), wide_display=True)
 
 ### 4.2 Line Plots
 
-<img width="1037" alt="Screen Shot 2020-10-18 at 6 11 39 PM" src="https://user-images.githubusercontent.com/46538726/96387162-10270700-116e-11eb-8e1b-1d6a305b644d.png">
+<img width="1032" alt="Screen Shot 2020-10-26 at 2 31 40 AM" src="https://user-images.githubusercontent.com/46538726/97140951-2287de80-1734-11eb-838c-e5200b71a4ff.png">
+
+<img width="1029" alt="Screen Shot 2020-10-26 at 2 32 44 AM" src="https://user-images.githubusercontent.com/46538726/97140984-359aae80-1734-11eb-8d40-8b3ba1b9aa81.png">
 
 ### 4.3 Bar plots
 
-<img width="1036" alt="Screen Shot 2020-10-18 at 6 11 11 PM" src="https://user-images.githubusercontent.com/46538726/96387168-1ddc8c80-116e-11eb-8f8d-4f3e8c5da1ba.png">
+<img width="1039" alt="Screen Shot 2020-10-26 at 2 33 07 AM" src="https://user-images.githubusercontent.com/46538726/97140999-3f241680-1734-11eb-9ddf-a0bd9209298a.png">
+
+<img width="1030" alt="Screen Shot 2020-10-26 at 2 34 45 AM" src="https://user-images.githubusercontent.com/46538726/97141014-4cd99c00-1734-11eb-8032-28f005fd05bd.png">
 
 # MNIST Example
 
