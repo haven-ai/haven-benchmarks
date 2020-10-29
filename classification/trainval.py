@@ -19,6 +19,8 @@ from src import datasets
 
 import argparse
 
+from src import optimizers
+
 
 def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cuda=False):
     # bookkeeping
@@ -47,18 +49,38 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
                                      train_flag=True,
                                      datadir=datadir,
                                      exp_dict=exp_dict)
+
+    train_loader = DataLoader(train_set,
+                              drop_last=True,
+                              shuffle=True,
+                              sampler=None,
+                              batch_size=exp_dict["batch_size"])
+
     # val set
     # load the dataset for validation from the datasets
     val_set = datasets.get_dataset(dataset_name=exp_dict["dataset"]["name"],
                                     train_flag=False,
                                     datadir=datadir,
                                     exp_dict=exp_dict)
-    
+
+
     # Model
     # ==================
     model = models.get_model(exp_dict).to(device)
     model_path = os.path.join(savedir, "model.pth")  # generate the route to keep the model of the experiment
     score_list_path = os.path.join(savedir, "score_list.pkl")  # generate the route to keep the score list
+    # Load Optimizer
+    # ==============
+    n_batches_per_epoch = len(train_set) / float(exp_dict["batch_size"])
+    opt = optimizers.get_optimizer(opt=exp_dict["opt"],
+                                   params=model.parameters(),
+                                   n_batches_per_epoch=n_batches_per_epoch,
+                                   n_train=len(train_set),
+                                   train_loader=train_loader,
+                                   model=model,
+                                   exp_dict=exp_dict,
+                                   batch_size=exp_dict["batch_size"])
+    opt_path = os.path.join(savedir, "opt_state_dict.pth")
 
     if os.path.exists(score_list_path):  
         # resume experiment from the last checkpoint, load the latest model
@@ -66,11 +88,17 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
         model.set_state_dict(hu.torch_load(model_path))
         score_list = hu.load_pkl(score_list_path)
         s_epoch = score_list[-1]["epoch"] + 1
+        #TODO not sure if this line should be opt.load_state_dict(torch.load(opt_path))
+        opt.set_state_dict(hu.torch_load(model_path))
+
     else:
         # restart experiment
         # epoch starts from zero
         score_list = []
         s_epoch = 0
+
+
+
 
     # Train & Val
     # ==================
@@ -92,6 +120,13 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
         # Train the model
         train_dict = model.train_on_loader(train_loader)
         score_dict.update(train_dict)  # update the training loss
+        score_dict["step"] = opt.state.get("step", 0) / int(n_batches_per_epoch)
+        score_dict["step_size"] = opt.state.get("step_size", {})
+        score_dict["step_size_avg"] = opt.state.get("step_size_avg", {})
+        score_dict["n_forwards"] = opt.state.get("n_forwards", {})
+        score_dict["n_backwards"] = opt.state.get("n_backwards", {})
+        score_dict["grad_norm"] = opt.state.get("grad_norm", {})
+        score_dict.update(opt.state["gv_stats"])
 
         # Validate and Visualize the model
         val_dict = model.val_on_loader(val_loader,
@@ -107,7 +142,9 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
         score_df = pd.DataFrame(score_list)
         print("\n", score_df.tail(), "\n")  # print out the epoch, train_loss, and val_acc in the score_list as a table
         hu.torch_save(model_path, model.get_state_dict()) # save the model state (i.e. state_dic, including optimizer) to the model path
+        hu.torch_save(opt_path, opt.state_dict)
         hu.save_pkl(score_list_path, score_list)
+
         print("Checkpoint Saved: %s" % savedir)
 
         # Save Best Checkpoint
@@ -120,6 +157,11 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
 
     print('Experiment completed et epoch %d' % e)
 
+
+# def train_on_loader(model, train_set, train_loader, opt, loss_function, epoch, use_backpack):
+#     for batch in tqdm.tqdm(train_loader):
+#         opt.zero_grad()
+#         ut.opt_step(exp_dict['opt']['name'], opt, model, batch, loss_function, use_backpack, epoch)
 
 if __name__ == "__main__":
     # create a parser that will hold all the information necessary to parse the command line into Python data type
