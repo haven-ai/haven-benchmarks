@@ -23,8 +23,8 @@ def compute_metric_on_dataset(model, dataset, metric_name, batch_size=128):
 
     score_sum = 0.
     for batch in tqdm.tqdm(loader):
-        images, labels = batch["images"].to(
-            device=device), batch["labels"].to(device=device)
+        images, labels = batch[0].to(
+            device=device), batch[1].to(device=device)
 
         score_sum += metric_function(model, images,
                                      labels).item() * images.shape[0]

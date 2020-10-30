@@ -116,8 +116,11 @@ def get_optimizer(opt, params, n_batches_per_epoch=None, n_train=None, lr=None,
         opt = torch.optim.Adagrad(params, lr=opt['lr'])
 
     elif opt_name == 'sgd':
-        # best_lr = lr if lr else 1e-3
-        opt = torch.optim.SGD(params, lr=opt['lr'])
+        best_lr = lr if lr else 1e-3
+        if isinstance(opt, dict):
+            opt = torch.optim.SGD(params, lr=opt['lr'])
+        else:
+            opt = torch.optim.SGD(params, lr=best_lr)
 
     elif opt_name == "sgd-m":
         best_lr = lr if lr else 1e-3
@@ -164,14 +167,14 @@ def get_optimizer(opt, params, n_batches_per_epoch=None, n_train=None, lr=None,
 
 def opt_step(name, opt, model, batch, loss_function, use_backpack, epoch):
     device = next(model.parameters()).device
-    images, labels = batch["images"].to(device=device), batch["labels"].to(device=device)
+    images, labels = batch[0].to(device=device), batch[1].to(device=device)
 
     if (name in ['adaptive_second']):
         closure = lambda for_backtracking=False : loss_function(model, images, labels, backwards=False, 
                                                                 backpack=(use_backpack and not for_backtracking))
         loss = opt.step(closure)
                 
-    elif (name in ["sgd_armijo", "ssn", 'adaptive_first', 'l4', 'ali_g']):
+    elif (name in ["sgd_armijo", "ssn", 'adaptive_first', 'l4', 'ali_g', 'sgd']):
         closure = lambda : loss_function(model, images, labels, backwards=False, backpack=use_backpack)
         loss = opt.step(closure)
                 

@@ -13,21 +13,11 @@ def get_model(exp_dict, train_set=None):
         model = Mlp(n_classes=10, dropout=False)
     elif exp_dict["model"]["name"] == "logistic":
         batch = train_set[0]
-        model = Mlp(input_size=batch['images'].shape[0], hidden_sizes=[], n_classes=2, bias=False)
+        model = Mlp(input_size=batch[0].shape[0], n_classes=2, bias=False)
     elif exp_dict["model"]["name"] == "densenet121":
         model = DenseNet121(num_classes=10)
     elif exp_dict["model"]["name"] == "resnet34":
         model = ResNet([3, 4, 6, 3], num_classes=10)
-    else:
-        raise ValueError
-
-    if exp_dict["optimizer"] == "adam":
-        model.opt = torch.optim.Adam(
-            model.parameters(), lr=exp_dict["lr"], betas=(0.99, 0.999), weight_decay=0.0005)
-
-    elif exp_dict["optimizer"] == "sgd":
-        model.opt = torch.optim.SGD(
-            model.parameters(), lr=exp_dict["lr"])
     else:
         raise ValueError
 

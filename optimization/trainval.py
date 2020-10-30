@@ -170,8 +170,8 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
         # Report & Save
         score_df = pd.DataFrame(score_list)
         print("\n", score_df.tail(), "\n")  # print out the epoch, train_loss, and val_acc in the score_list as a table
-        hu.torch_save(model_path, model.get_state_dict()) # save the model state (i.e. state_dic, including optimizer) to the model path
-        hu.torch_save(opt_path, opt.state_dict)
+        hu.torch_save(model_path, model.state_dict()) # save the model state (i.e. state_dic, including optimizer) to the model path
+        hu.torch_save(opt_path, opt.state_dict())
         hu.save_pkl(score_list_path, score_list)
 
         print("Checkpoint Saved: %s" % savedir)
@@ -181,7 +181,9 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
             hu.save_pkl(os.path.join(
                 savedir, "score_list_best.pkl"), score_list)
             hu.torch_save(os.path.join(savedir, "model_best.pth"),
-                          model.get_state_dict())
+                          model.state_dict())
+            hu.torch_save(os.path.join(savedir, "opt_best.pth", 
+                          opt.state_dict()))
             print("Saved Best: %s" % savedir)
 
     print('Experiment completed et epoch %d' % e)
