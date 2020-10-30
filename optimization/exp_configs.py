@@ -1,6 +1,5 @@
 from haven import haven_utils as hu
 RUNS = [0, 1, 2]
-opt_list = ['sgd']
 EXP_GROUPS = {}
 
 # def get_benchmark(benchmark, opt_list=opt_list):
@@ -48,6 +47,12 @@ EXP_GROUPS = {}
 #                 "acc_func": ["softmax_accuracy"]
 #                 }
 
+adam_constant_list = []
+adam_constant_list += [
+    {'name': 'adam', 'lr': lr, 'betas': [0, 0.99]} for lr in [1e-3]
+]
+
+opt_list = adam_constant_list
 
 EXP_GROUPS['mnist'] = {"dataset": {'name': 'mnist'},
         "model": {'name': 'mlp'},
@@ -90,5 +95,6 @@ EXP_GROUPS['cifar10'] = {"dataset": {'name': 'synthetic'},
         "opt": opt_list,
         "acc_func": ["softmax_accuracy"]
         }
+
 # TODO: may need more info for each optimizer
 EXP_GROUPS = {k: hu.cartesian_exp_group(v) for k, v in EXP_GROUPS.items()}

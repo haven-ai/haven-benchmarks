@@ -33,7 +33,6 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
 
     os.makedirs(savedir, exist_ok=True)  # create the route to keep the experiment result
     hu.save_json(os.path.join(savedir, "exp_dict.json"), exp_dict)  # save the experiment config as json
-    print(pprint.pprint(exp_dict))
     print("Experiment saved in %s" % savedir)
 
     # set seed and device
@@ -182,8 +181,8 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
                 savedir, "score_list_best.pkl"), score_list)
             hu.torch_save(os.path.join(savedir, "model_best.pth"),
                           model.state_dict())
-            hu.torch_save(os.path.join(savedir, "opt_best.pth", 
-                          opt.state_dict()))
+            hu.torch_save(os.path.join(savedir, "opt_best.pth"), 
+                          opt.state_dict())
             print("Saved Best: %s" % savedir)
 
     print('Experiment completed et epoch %d' % e)
@@ -193,7 +192,7 @@ def train_on_loader(model, train_set, train_loader, opt, loss_function, epoch):
     for batch in tqdm.tqdm(train_loader):
         opt.zero_grad()
         # TODO: change this if optimizer contains more info!! and output of opt_step is not captured?
-        optimizers.opt_step(exp_dict['opt'], opt, model, batch, loss_function, False, epoch)
+        optimizers.opt_step(exp_dict['opt']['name'], opt, model, batch, loss_function, False, epoch)
 
 if __name__ == "__main__":
     # create a parser that will hold all the information necessary to parse the command line into Python data type
