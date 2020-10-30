@@ -49,10 +49,15 @@ EXP_GROUPS = {}
 
 adam_constant_list = []
 adam_constant_list += [
-    {'name': 'adam', 'lr': lr, 'betas': [0, 0.99]} for lr in [1e-3]
+    {'name': 'adaptive_first', 'lr': lr, 'betas': [0, 0.99]} for lr in [1e-3]
 ]
 
-opt_list = adam_constant_list
+sls_list = []
+c_list = [.1, .2, 0.5]
+for c in c_list:
+    sls_list += [{'name': "sgd_armijo", 'c': c, 'reset_option': 1}]
+
+opt_list = sls_list
 
 EXP_GROUPS['mnist'] = {"dataset": {'name': 'mnist'},
         "model": {'name': 'mlp'},
