@@ -122,6 +122,7 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
                             batch_size=1,
                             num_workers=num_workers)
 
+    e = s_epoch 
     for e in range(s_epoch, exp_dict["max_epoch"]):
         # Set seed
         seed = e + exp_dict['runs']
