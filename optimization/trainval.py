@@ -16,6 +16,7 @@ from torch.utils.data import RandomSampler, DataLoader
 
 from src import models
 from src import datasets
+from src import metrics
 
 import argparse
 
@@ -32,14 +33,22 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
 
     os.makedirs(savedir, exist_ok=True)  # create the route to keep the experiment result
     hu.save_json(os.path.join(savedir, "exp_dict.json"), exp_dict)  # save the experiment config as json
+    print(pprint.pprint(exp_dict))
     print("Experiment saved in %s" % savedir)
 
-    # set cuda
+    # set seed and device
+    # ==================
+    seed = 42 + exp_dict['runs']
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     if use_cuda:
         device = 'cuda'
+        torch.cuda.manual_seed_all(seed)
         assert torch.cuda.is_available(), 'cuda is not available, please run with "-c 0"'  # check if cuda is available 
     else:
         device = 'cpu'
+
+    print('Running on device: %s' % device)
 
     # Dataset
     # ==================
@@ -66,9 +75,12 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
 
     # Model
     # ==================
-    model = models.get_model(exp_dict).to(device)
+    model = models.get_model(exp_dict, train_set=train_set).to(device)
     model_path = os.path.join(savedir, "model.pth")  # generate the route to keep the model of the experiment
-    score_list_path = os.path.join(savedir, "score_list.pkl")  # generate the route to keep the score list
+    
+    # Choose loss and metric function
+    loss_function = metrics.get_metric_function(exp_dict["loss_func"])
+
     # Load Optimizer
     # ==============
     n_batches_per_epoch = len(train_set) / float(exp_dict["batch_size"])
@@ -78,27 +90,24 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
                                    n_train=len(train_set),
                                    train_loader=train_loader,
                                    model=model,
+                                   loss_function=loss_function, 
                                    exp_dict=exp_dict,
                                    batch_size=exp_dict["batch_size"])
     opt_path = os.path.join(savedir, "opt_state_dict.pth")
-
+    
+    score_list_path = os.path.join(savedir, "score_list.pkl")
     if os.path.exists(score_list_path):  
         # resume experiment from the last checkpoint, load the latest model
         # epoch starts from last completed epoch plus one
-        model.set_state_dict(hu.torch_load(model_path))
+        model.load_state_dict(hu.torch_load(model_path))
+        opt.load_state_dict(hu.torch_load(opt_path))
         score_list = hu.load_pkl(score_list_path)
         s_epoch = score_list[-1]["epoch"] + 1
-        #TODO not sure if this line should be opt.load_state_dict(torch.load(opt_path))
-        opt.set_state_dict(hu.torch_load(model_path))
-
     else:
         # restart experiment
         # epoch starts from zero
         score_list = []
         s_epoch = 0
-
-
-
 
     # Train & Val
     # ==================
@@ -115,11 +124,38 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
                             num_workers=num_workers)
 
     for e in range(s_epoch, exp_dict["max_epoch"]):
-        score_dict = {}
+        # Set seed
+        seed = s_epoch + exp_dict['runs']
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        
+        score_dict = {"epoch": s_epoch}
+
+        # run with metrics to validate the model
+        # 1. Compute train loss over train set
+        score_dict["train_loss"] = metrics.compute_metric_on_dataset(model, 
+                                            train_set,
+                                            metric_name=exp_dict["loss_func"],
+                                            batch_size=exp_dict['batch_size'])
+
+        # 2. Compute val acc over val set
+        score_dict["val_acc"] = metrics.compute_metric_on_dataset(model, val_set,
+                                        metric_name=exp_dict["acc_func"],
+                                            batch_size=exp_dict['batch_size'])
+
+        # Train
+        # -----
+        model.train()
+        print("%d - Training model with %s..." % (s_epoch, exp_dict["loss_func"]))
+
+        s_time = time.time()
+
+        train_on_loader(model, train_set, train_loader, opt, loss_function, s_epoch)
+      
+        e_time = time.time()
 
         # Train the model
-        train_dict = model.train_on_loader(train_loader)
-        score_dict.update(train_dict)  # update the training loss
         score_dict["step"] = opt.state.get("step", 0) / int(n_batches_per_epoch)
         score_dict["step_size"] = opt.state.get("step_size", {})
         score_dict["step_size_avg"] = opt.state.get("step_size_avg", {})
@@ -128,14 +164,7 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
         score_dict["grad_norm"] = opt.state.get("grad_norm", {})
         score_dict.update(opt.state["gv_stats"])
 
-        # Validate and Visualize the model
-        val_dict = model.val_on_loader(val_loader,
-                        savedir_images=os.path.join(savedir, "images"),
-                        n_images=3)
-        score_dict.update(val_dict)  # update the validation accuracy
-
         # Get new score_dict
-        score_dict["epoch"] = len(score_list)  # keep track of the epoch as score_list increments
         score_list += [score_dict]
 
         # Report & Save
@@ -158,10 +187,11 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
     print('Experiment completed et epoch %d' % e)
 
 
-# def train_on_loader(model, train_set, train_loader, opt, loss_function, epoch, use_backpack):
-#     for batch in tqdm.tqdm(train_loader):
-#         opt.zero_grad()
-#         ut.opt_step(exp_dict['opt']['name'], opt, model, batch, loss_function, use_backpack, epoch)
+def train_on_loader(model, train_set, train_loader, opt, loss_function, epoch):
+    for batch in tqdm.tqdm(train_loader):
+        opt.zero_grad()
+        # TODO: change this if optimizer contains more info!! and output of opt_step is not captured?
+        optimizers.opt_step(exp_dict['opt'], opt, model, batch, loss_function, False, epoch)
 
 if __name__ == "__main__":
     # create a parser that will hold all the information necessary to parse the command line into Python data type

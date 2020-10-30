@@ -96,25 +96,6 @@ def get_optimizer(opt, params, n_batches_per_epoch=None, n_train=None, lr=None,
                       n_batches_per_epoch=n_batches_per_epoch,
                       line_search_fn="goldstein")
 
-    elif opt_name == "sgd_nesterov":
-        opt = sls.SlsAcc(params, 
-                        acceleration_method="nesterov", 
-                        gamma=opt_dict.get("gamma", 2.0),
-                        aistats_eta_bound=opt_dict.get("aistats_eta_bound", 10.0))
-
-    elif opt_name == "sgd_polyak":
-        opt = sls.SlsAcc(params, 
-                         c=opt_dict.get("c") or 0.1,
-                         momentum=opt_dict.get("momentum", 0.6),
-                         n_batches_per_epoch=n_batches_per_epoch,
-                         gamma=opt_dict.get("gamma", 2.0),
-                         acceleration_method="polyak",
-                         aistats_eta_bound=opt_dict.get("aistats_eta_bound", 10.0),
-                         reset_option=opt_dict.get("reset", 0))
-
-    elif opt_name == "seg":
-        opt = sls.SlsEg(params, n_batches_per_epoch=n_batches_per_epoch)
-
     elif opt_name == "ssn":
         opt = ssn.Ssn(params, 
             n_batches_per_epoch=n_batches_per_epoch, 
@@ -181,5 +162,29 @@ def get_optimizer(opt, params, n_batches_per_epoch=None, n_train=None, lr=None,
     return opt
 
 
+def opt_step(name, opt, model, batch, loss_function, use_backpack, epoch):
+    device = next(model.parameters()).device
+    images, labels = batch["images"].to(device=device), batch["labels"].to(device=device)
 
+    if (name in ['adaptive_second']):
+        closure = lambda for_backtracking=False : loss_function(model, images, labels, backwards=False, 
+                                                                backpack=(use_backpack and not for_backtracking))
+        loss = opt.step(closure)
+                
+    elif (name in ["sgd_armijo", "ssn", 'adaptive_first', 'l4', 'ali_g']):
+        closure = lambda : loss_function(model, images, labels, backwards=False, backpack=use_backpack)
+        loss = opt.step(closure)
+                
+    elif (name in ['sps']):
+        closure = lambda : loss_function(model, images, labels, backwards=False, backpack=use_backpack)
+        loss = opt.step(closure, batch)
 
+    elif (name in ["adam", "adagrad", 'radam', 'plain_radam', 'adabound']):
+        loss = loss_function(model, images, labels, backpack=use_backpack)
+        loss.backward()
+        opt.step()
+
+    else:
+        raise ValueError('%s optimizer does not exist' % name)
+    
+    return loss
