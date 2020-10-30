@@ -124,12 +124,12 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
 
     for e in range(s_epoch, exp_dict["max_epoch"]):
         # Set seed
-        seed = s_epoch + exp_dict['runs']
+        seed = e + exp_dict['runs']
         np.random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         
-        score_dict = {"epoch": s_epoch}
+        score_dict = {"epoch": e}
 
         # run with metrics to validate the model
         # 1. Compute train loss over train set
@@ -146,11 +146,11 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
         # Train
         # -----
         model.train()
-        print("%d - Training model with %s..." % (s_epoch, exp_dict["loss_func"]))
+        print("%d - Training model with %s..." % (e, exp_dict["loss_func"]))
 
         s_time = time.time()
 
-        train_on_loader(model, train_set, train_loader, opt, loss_function, s_epoch)
+        train_on_loader(model, train_set, train_loader, opt, loss_function, e)
       
         e_time = time.time()
 
