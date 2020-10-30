@@ -50,4 +50,5 @@ def get_benchmark(benchmark, opt_list=opt_list):
                 "acc_func": ["softmax_accuracy"]
                 }
         EXP_GROUPS = hu.cartesian_exp_group(exp)
-        
+
+# TODO: may need more info for each optimizer
