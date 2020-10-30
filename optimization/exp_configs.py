@@ -52,12 +52,23 @@ adam_constant_list += [
     {'name': 'adaptive_first', 'lr': lr, 'betas': [0, 0.99]} for lr in [1e-3]
 ]
 
+amsgrad_constant_list = []
+amsgrad_constant_list += [
+    {'name': 'adam', 'lr': lr, 'betas': [0, 0.99], 'amsgrad':True} for lr in [1e-3]
+]
+
 sls_list = []
 c_list = [.1, .2, 0.5]
 for c in c_list:
     sls_list += [{'name': "sgd_armijo", 'c': c, 'reset_option': 1}]
 
-opt_list = sls_list
+
+# sps_list = []
+# c_list = [.2, .5, 1.0]
+# for c in c_list:
+#     sps_list += [{'name': "sps", 'c': c}]
+
+opt_list = amsgrad_constant_list
 
 EXP_GROUPS['mnist'] = {"dataset": {'name': 'mnist'},
         "model": {'name': 'mlp'},
