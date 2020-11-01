@@ -56,7 +56,7 @@ EXP_GROUPS['syn'] = {"dataset": {'name': 'synthetic'},
         }
 
 EXP_GROUPS['cifar10'] = {"dataset": {'name': 'cifar10'},
-        "model": [{'name': "densenet121"}, {'name': "resnet34"}],
+        "model": {'name': "densenet121"},
         "runs": RUNS,
         "batch_size": [128],
         "max_epoch": [200],
