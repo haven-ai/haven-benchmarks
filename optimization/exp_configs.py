@@ -24,7 +24,7 @@ adagrad = [{'name': 'adagrad', 'lr': 1e-3}]
 # for c in c_list:
 #     sps_list += [{'name': "sps", 'c': c}]
 
-opt_list = [] + adam_constant_list + sls_list + amsgrad_constant_list + adagrad
+opt_list = [] + sgd + adam_constant_list + sls_list + amsgrad_constant_list + adagrad
 
 EXP_GROUPS['mnist'] = {"dataset": {'name': 'mnist'},
         "model": {'name': 'mlp'},

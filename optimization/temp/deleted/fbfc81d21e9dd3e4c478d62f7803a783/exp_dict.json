@@ -1,0 +1,26 @@
+{
+    "acc_func": "softmax_accuracy",
+    "batch_size": 128,
+    "dataset": {
+        "name": "mnist"
+    },
+    "dataset_size": {
+        "train": "all",
+        "val": "all"
+    },
+    "loss_func": "softmax_loss",
+    "max_epoch": 100,
+    "model": {
+        "name": "mlp"
+    },
+    "opt": {
+        "amsgrad": true,
+        "betas": [
+            0,
+            0.99
+        ],
+        "lr": 0.001,
+        "name": "adam"
+    },
+    "runs": 0
+}

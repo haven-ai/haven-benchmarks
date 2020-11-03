@@ -174,7 +174,7 @@ def opt_step(name, opt, model, batch, loss_function, use_backpack, epoch):
                                                                 backpack=(use_backpack and not for_backtracking))
         loss = opt.step(closure)
                 
-    elif (name in ["sgd_armijo", "ssn", 'adaptive_first', 'l4', 'ali_g', 'sgd']):
+    elif (name in ["sgd_armijo", "ssn", 'adaptive_first', 'l4', 'ali_g']):
         closure = lambda : loss_function(model, images, labels, backwards=False, backpack=use_backpack)
         loss = opt.step(closure)
                 
@@ -182,7 +182,7 @@ def opt_step(name, opt, model, batch, loss_function, use_backpack, epoch):
         closure = lambda : loss_function(model, images, labels, backwards=False, backpack=use_backpack)
         loss = opt.step(closure, batch)
 
-    elif (name in ["adam", "adagrad", 'radam', 'plain_radam', 'adabound']):
+    elif (name in ["adam", "adagrad", 'radam', 'plain_radam', 'adabound', 'sgd']):
         loss = loss_function(model, images, labels, backpack=use_backpack)
         loss.backward()
         opt.step()
