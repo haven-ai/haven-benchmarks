@@ -4,12 +4,12 @@ EXP_GROUPS = {}
 
 adam_constant_list = []
 adam_constant_list += [
-    {'name': 'adam', 'lr': lr, 'betas': [0, 0.99]} for lr in [1e-3]
+    {'name': 'adam', 'lr': 1e-3, 'betas': [0, 0.99]}
 ]
 
 amsgrad_constant_list = []
 amsgrad_constant_list += [
-    {'name': 'adam', 'lr': lr, 'betas': [0, 0.99], 'amsgrad':True} for lr in [1e-3]
+    {'name': 'adam', 'lr': 1e-3, 'betas': [0, 0.99], 'amsgrad':True}
 ]
 
 sls_list = [{'name': "sgd_armijo", 'c': .2, 'reset_option': 1}]
@@ -50,7 +50,7 @@ EXP_GROUPS['syn'] = {"dataset": {'name': 'synthetic'},
         "loss_func": ["softmax_loss"],
         "opt": opt_list,
         "acc_func": ["softmax_accuracy"],
-        'margin': [0.05, 0.1, 0.5, 0.01],
+        'margin': [0.1],
         "n_samples": [1000],
         "d": 20
         }
