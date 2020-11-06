@@ -10,6 +10,7 @@ import itertools
 import os
 import pylab as plt
 import exp_configs
+import job_configs
 import time
 import numpy as np
 from torch.utils.data import RandomSampler, DataLoader
@@ -196,6 +197,48 @@ def train_on_loader(model, train_set, train_loader, opt, loss_function, epoch):
         # TODO: change this if optimizer contains more info!! and output of opt_step is not captured?
         optimizers.opt_step(exp_dict['opt']['name'], opt, model, batch, loss_function, False, epoch)
 
+
+def save_exp_folder(exp_dict, savedir_base, reset):
+    exp_id = hu.hash_dict(exp_dict)  # generate a unique id for the experiment
+    savedir = os.path.join(savedir_base, exp_id)  # generate a route with the experiment id
+    if reset:
+        hc.delete_and_backup_experiment(savedir)
+
+    os.makedirs(savedir, exist_ok=True)  # create the route to keep the experiment result
+    hu.save_json(os.path.join(savedir, "exp_dict.json"), exp_dict)  # save the experiment config as json
+
+
+def get_existing_slurm_job_commands():
+    print("not implemented")
+    return []
+
+def launch_slurm_job(command, savedir_base):
+    # read slurm setting
+    lines = "#! /bin/bash \n"
+    lines += "#SBATCH --account=%s \n" % job_configs.ACCOUNT_ID
+    for key in list(job_configs.JOB_CONFIG.keys()):
+        lines += "#SBATCH --%s=%s \n" % (key, job_configs.JOB_CONFIG[key])
+    lines += command
+
+    file_name = "slurm.sh"
+    hu.save_txt(file_name, lines)
+    # launch the exp
+    submit_command = "sbatch slurm.sh"
+    job_id = hu.subprocess_call(submit_command).split()[-1]
+
+    # save the command and job id in job_dict.json
+    job_dict = {
+        "command": command,
+        "job_id": job_id
+    }
+    exp_id = command.split("-ei ")[1].split(" ")[0]  
+    savedir = os.path.join(savedir_base, exp_id)
+    hu.save_json(os.path.join(savedir, "job_dict.json"), job_dict)
+
+    # delete the slurm.sh
+    os.remove(file_name)
+
+
 if __name__ == "__main__":
     # create a parser that will hold all the information necessary to parse the command line into Python data type
     parser = argparse.ArgumentParser()
@@ -206,7 +249,7 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--datadir', required=True)
     parser.add_argument("-r", "--reset", default=0, type=int)
     parser.add_argument("-ei", "--exp_id", default=None)
-    parser.add_argument("-j", "--run_jobs", default=0, type=int)
+    parser.add_argument("-s", "--run_slurm", default=0, type=int)
     parser.add_argument("-nw", "--num_workers", type=int, default=0)
     parser.add_argument("-c", "--use_cuda", type=int, default=0)    # user can define whether to run with cuda or cpu, default is not using cuda
 
@@ -230,12 +273,29 @@ if __name__ == "__main__":
 
     # Run experiments
     # ===============
-    if args.run_jobs:
+    # if args.run_jobs:
+    #     # run with job scheduler
+    #     from haven import haven_jobs as hj
+    #     hj.run_exp_list_jobs(exp_list, 
+    #                    savedir_base=args.savedir_base, 
+    #                    workdir=os.path.dirname(os.path.realpath(__file__)))
+
+    if args.run_slurm:
         # run with job scheduler
-        from haven import haven_jobs as hj
-        hj.run_exp_list_jobs(exp_list, 
-                       savedir_base=args.savedir_base, 
-                       workdir=os.path.dirname(os.path.realpath(__file__)))
+        command_list = []
+        for exp_dict in exp_list:
+            save_exp_folder(exp_dict, args.savedir_base, args.reset)
+            exp_id = hu.hash_dict(exp_dict)
+            command_list += ["python trainval.py -ei %s -sb %s -d %s" % (exp_id, args.savedir_base, args.datadir)]
+        # get slurm existing commands
+        existing_commands = get_existing_slurm_job_commands()
+        for command in command_list:
+            # check if command exists
+            if command in existing_commands:
+                print('command exists')
+                continue
+            # otherwise launch command
+            launch_slurm_job(command, args.savedir_base) 
 
     else:
         for exp_dict in exp_list:
