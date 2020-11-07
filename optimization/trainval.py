@@ -163,7 +163,7 @@ def trainval(exp_dict, savedir_base, datadir, reset=False, num_workers=0, use_cu
         score_dict["n_forwards"] = opt.state.get("n_forwards", {})
         score_dict["n_backwards"] = opt.state.get("n_backwards", {})
         score_dict["grad_norm"] = opt.state.get("grad_norm", {})
-        score_dict["epoch_time"] = e_time - s_time
+        score_dict["train_epoch_time"] = e_time - s_time
         score_dict.update(opt.state["gv_stats"])
 
         # Get new score_dict
