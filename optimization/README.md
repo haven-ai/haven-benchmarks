@@ -62,9 +62,14 @@ hj.get_dashboard(rm, vars(), wide_display=True)
 
 ### 4.2 Line Plots
 
-<img width="1032" alt="Screen Shot 2020-10-26 at 2 31 40 AM" src="https://user-images.githubusercontent.com/46538726/97140951-2287de80-1734-11eb-838c-e5200b71a4ff.png">
+<img width="1020" alt="trainloss_runs_1" src="https://user-images.githubusercontent.com/46538726/98453073-331c5980-2123-11eb-8cd6-88488649a45a.png">
 
-<img width="1029" alt="Screen Shot 2020-10-26 at 2 32 44 AM" src="https://user-images.githubusercontent.com/46538726/97140984-359aae80-1734-11eb-8d40-8b3ba1b9aa81.png">
+<img width="1022" alt="trainloss_runs_2" src="https://user-images.githubusercontent.com/46538726/98453075-33b4f000-2123-11eb-9cde-5525c00b4fc3.png">
+
+<img width="1020" alt="valacc_runs_1" src="https://user-images.githubusercontent.com/46538726/98453076-344d8680-2123-11eb-93f0-309d8ab73ed8.png">
+
+<img width="1020" alt="valacc_runs_2" src="https://user-images.githubusercontent.com/46538726/98453078-36afe080-2123-11eb-8539-15b8947cc741.png">
+
 
 ### 4.3 Bar plots
 
