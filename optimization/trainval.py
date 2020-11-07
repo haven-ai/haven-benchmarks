@@ -231,10 +231,11 @@ def launch_slurm_job(command, savedir_base):
         lines += "#SBATCH --%s=%s \n" % (key, job_configs.JOB_CONFIG[key])
     lines += command
 
-    file_name = "slurm.sh"
+    exp_id = command.split("-ei ")[1].split(" ")[0]  
+    file_name = "%s.sh" % exp_id
     hu.save_txt(file_name, lines)
     # launch the exp
-    submit_command = "sbatch slurm.sh"
+    submit_command = "sbatch %s.sh" % exp_id
     job_id = hu.subprocess_call(submit_command).split()[-1]
 
     # save the command and job id in job_dict.json
@@ -242,7 +243,6 @@ def launch_slurm_job(command, savedir_base):
         "command": command,
         "job_id": job_id
     }
-    exp_id = command.split("-ei ")[1].split(" ")[0]  
     savedir = os.path.join(savedir_base, exp_id)
     hu.save_json(os.path.join(savedir, "job_dict.json"), job_dict)
 
