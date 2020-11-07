@@ -214,11 +214,13 @@ def get_existing_slurm_job_commands(exp_list, savedir_base):
         exp_id = hu.hash_dict(exp_dict)
         savedir = os.path.join(savedir_base, exp_id)
         file_name = os.path.join(savedir, "job_dict.json")
-        job_dict = hu.load_json(file_name)  # todo: error handling?
+        if not os.path.exists(file_name):
+            continue
+        job_dict = hu.load_json(file_name)
         job_id = job_dict["job_id"]
         job_status = hu.subprocess_call("scontrol show job %s" % job_id).split("JobState=")[1].split(" ")[0]
-        if job_status == "RUNNING":
-            existing_job_commands += job_dict["command"] 
+        if job_status == "RUNNING" or job_status == "PENDING":
+            existing_job_commands += [job_dict["command"]]
         
     return existing_job_commands
 
@@ -235,7 +237,7 @@ def launch_slurm_job(command, savedir_base):
     file_name = "%s.sh" % exp_id
     hu.save_txt(file_name, lines)
     # launch the exp
-    submit_command = "sbatch %s.sh" % exp_id
+    submit_command = "sbatch %s" % file_name
     job_id = hu.subprocess_call(submit_command).split()[-1]
 
     # save the command and job id in job_dict.json
@@ -297,7 +299,7 @@ if __name__ == "__main__":
         for exp_dict in exp_list:
             save_exp_folder(exp_dict, args.savedir_base, args.reset)
             exp_id = hu.hash_dict(exp_dict)
-            command_list += ["python trainval.py -ei %s -sb %s -d %s" % (exp_id, args.savedir_base, args.datadir)]
+            command_list += ["python trainval.py -ei %s -sb %s -d %s -c %d" % (exp_id, args.savedir_base, args.datadir, args.use_cuda)]
         # get slurm existing commands
         existing_commands = get_existing_slurm_job_commands(exp_list, args.savedir_base)
         for command in command_list:
