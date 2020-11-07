@@ -208,9 +208,20 @@ def save_exp_folder(exp_dict, savedir_base, reset):
     hu.save_json(os.path.join(savedir, "exp_dict.json"), exp_dict)  # save the experiment config as json
 
 
-def get_existing_slurm_job_commands():
-    print("not implemented")
-    return []
+def get_existing_slurm_job_commands(exp_list, savedir_base):
+    existing_job_commands = []
+    for exp_dict in exp_list:
+        exp_id = hu.hash_dict(exp_dict)
+        savedir = os.path.join(savedir_base, exp_id)
+        file_name = os.path.join(savedir, "job_dict.json")
+        job_dict = hu.load_json(file_name)  # todo: error handling?
+        job_id = job_dict["job_id"]
+        job_status = hu.subprocess_call("scontrol show job %s" % job_id).split("JobState=")[1].split(" ")[0]
+        if job_status == "RUNNING":
+            existing_job_commands += job_dict["command"] 
+        
+    return existing_job_commands
+
 
 def launch_slurm_job(command, savedir_base):
     # read slurm setting
@@ -288,7 +299,7 @@ if __name__ == "__main__":
             exp_id = hu.hash_dict(exp_dict)
             command_list += ["python trainval.py -ei %s -sb %s -d %s" % (exp_id, args.savedir_base, args.datadir)]
         # get slurm existing commands
-        existing_commands = get_existing_slurm_job_commands()
+        existing_commands = get_existing_slurm_job_commands(exp_list, args.savedir_base)
         for command in command_list:
             # check if command exists
             if command in existing_commands:
@@ -296,6 +307,7 @@ if __name__ == "__main__":
                 continue
             # otherwise launch command
             launch_slurm_job(command, args.savedir_base) 
+            time.sleep(1)
 
     else:
         for exp_dict in exp_list:
