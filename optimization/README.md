@@ -73,6 +73,6 @@ hj.get_dashboard(rm, vars(), wide_display=True)
 
 ### 4.3 Bar plots
 
-<img width="1039" alt="Screen Shot 2020-10-26 at 2 33 07 AM" src="https://user-images.githubusercontent.com/46538726/97140999-3f241680-1734-11eb-9ddf-a0bd9209298a.png">
+<img width="1021" alt="epochtime_runs_1" src="https://user-images.githubusercontent.com/46538726/98453163-09affd80-2124-11eb-978c-d6af9ac765de.png">
 
-<img width="1030" alt="Screen Shot 2020-10-26 at 2 34 45 AM" src="https://user-images.githubusercontent.com/46538726/97141014-4cd99c00-1734-11eb-8032-28f005fd05bd.png">
+<img width="1021" alt="epochtime_runs_2" src="https://user-images.githubusercontent.com/46538726/98453164-09affd80-2124-11eb-9512-7d25404bb83a.png">
