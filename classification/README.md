@@ -71,3 +71,15 @@ hj.get_dashboard(rm, vars(), wide_display=True)
 <img width="1039" alt="Screen Shot 2020-10-26 at 2 33 07 AM" src="https://user-images.githubusercontent.com/46538726/97140999-3f241680-1734-11eb-9ddf-a0bd9209298a.png">
 
 <img width="1030" alt="Screen Shot 2020-10-26 at 2 34 45 AM" src="https://user-images.githubusercontent.com/46538726/97141014-4cd99c00-1734-11eb-8032-28f005fd05bd.png">
+
+## 5. Code Structure
+classification/
+│
+├── src/
+│   ├── datasets.py
+│   └── models.py
+├── scripts/
+│   ├── visualize_mnist.py
+├── exp_configs.py
+├── README.md
+└── trainval.py
